@@ -79,8 +79,8 @@ class Corpus:
         self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[
             self.PAD] = self.min_word_freq
         for dataset_type in ["train", "val"]:
-            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),
-                                     annFile=FilePathManager.resolve(
+            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #dset.CocoCaptions()：加载coco的caption
+                                     annFile=FilePathManager.resolve(                 #path.resolve([…paths])：拼接后解析为一个绝对路径
                                          f"data/annotations/captions_{dataset_type}2017.json"),
                                      transform=transforms.ToTensor())
             for _, captions in caps:
