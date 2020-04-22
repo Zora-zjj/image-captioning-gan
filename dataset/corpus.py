@@ -76,9 +76,9 @@ class Corpus:
     def prepare(self):
         self.word2idx = defaultdict(int)     #defaultdict(key)，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值
         # to make sure start_symbol, end_symbol, pad, and unk will be included
-        self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[
+        self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[    #？？？
             self.PAD] = self.min_word_freq
-        for dataset_type in ["train", "val"]:
+        for dataset_type in ["train", "val"]:                                                #f表示格式化字符串,相似str.format()
             caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #dset.CocoCaptions()：加载coco的caption
                                      annFile=FilePathManager.resolve(                 #path.resolve([…paths])：拼接后解析为一个绝对路径
                                          f"data/annotations/captions_{dataset_type}2017.json"),
@@ -90,7 +90,7 @@ class Corpus:
                         self.word2idx[token] += 1
         temp = {}
         embeddings = {}
-        fast_text = FastText.load(FilePathManager.resolve("data/fasttext.model"), mmap="r")
+        fast_text = FastText.load(FilePathManager.resolve("data/fasttext.model"), mmap="r")  #????
         for k, v in self.word2idx.items():
             if v >= self.min_word_freq:
                 temp[k] = len(temp)
@@ -101,8 +101,8 @@ class Corpus:
         self.fast_text = embeddings
 
     @staticmethod
-    def remove_nonalpha(word: str):
-        return word.strip().strip(".")
+    def remove_nonalpha(word: str): #函数参数中的冒号是参数的类型建议符，告诉程序员希望传入的实参的类型。函数后面跟着的箭头是函数返回值的类型建议符
+        return word.strip().strip(".")    #strip()移除字符串头尾指定的字符（默认为空格或换行符）
 
     @staticmethod
     def preprocess_sentence(sentence: str):
@@ -114,8 +114,8 @@ class Corpus:
         temp = self.preprocess_sentence(sentence).split(" ")
         return [self.remove_nonalpha(x)
                 for x in temp
-                if not x.isspace() and x != "" and all(c in string.printable for c in x)]
-
+                if not x.isspace() and x != "" and all(c in string.printable for c in x)]  #str.isspace()检测字符串是否只由空格组成
+                                                         #string.printable :包含所有可打印字符的字符串,ASCII码中第33～126号是可打印字符
     def pad_sentence(self, tokens):
         tokens = tokens[:self.max_sentence_length]
         temp = len(tokens)
@@ -144,12 +144,12 @@ class Corpus:
 
     def store(self, file_path):
         with open(file_path, "wb") as f:
-            pickle.dump((self.word2idx, self.idx2word, self.fast_text), f)
+            pickle.dump((self.word2idx, self.idx2word, self.fast_text), f)    #pickle.dump(obj, file, [,protocol])序列化对象，将对象obj保存到文件file中去。
 
     @staticmethod
     def load(file_path):
         with open(file_path, "rb") as f:
-            word2idx, idx2word, fast_text = pickle.load(f)
+            word2idx, idx2word, fast_text = pickle.load(f)  #pickle.load(file)反序列化对象，将文件中的数据解析为一个python对象。file中有read()接口和readline()接口
         return Corpus(word2idx, idx2word, fast_text)
 
 
