@@ -28,7 +28,7 @@ class Corpus:
     def word_embedding(self, word):
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
-        if isinstance(word, int):
+        if isinstance(word, int):             #当word是idx
             word = self.word_from_index(word)
         result = torch.from_numpy(self.fast_text[word]).view(-1)
         return result
