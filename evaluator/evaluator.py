@@ -31,7 +31,7 @@ class Evaluator(nn.Module):
         hidden = hidden.view(batch_size, -1)
         image_features = self.linear(image_features)
         image_features = image_features.view(batch_size, -1)
-        sim = torch.bmm(image_features.view(batch_size, 1, -1), hidden.view(batch_size, -1, 1))
+        sim = torch.bmm(image_features.view(batch_size, 1, -1), hidden.view(batch_size, -1, 1))   #torch.bmm(a,b),a为(b,h,w),b为(b,w,h)，计算两个tensor的矩阵乘法，两个tensor的维度必须为3.
         sim = self.sigmoid(sim)
         sim = sim.view(-1)
         return sim
