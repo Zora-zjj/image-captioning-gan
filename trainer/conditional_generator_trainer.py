@@ -43,8 +43,8 @@ for epoch in range(epochs):
         input = pack_padded_sequence(input, [17] * images.shape[0], True)
         optimizer.zero_grad()
         outputs = generator.forward(images, input)
-        target = target.contiguous().view(-1)
-        loss = criterion(outputs, target)
+        target = target.contiguous().view(-1)   #tensor.contiguous 其实是在内存中复制了一个新的tensor，而这个tensor就是contiguous的了,用户层面上无法察觉到不同之处
+        loss = criterion(outputs, target)    
         loss.backward()
         optimizer.step()
         end = time.time()
