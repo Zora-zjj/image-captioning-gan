@@ -16,7 +16,7 @@ class Rollout:
         self.output_linear = None
 
     def reward(self, generated, image_features, hidden, monte_carlo_count, evaluator, steps=1):
-        assert monte_carlo_count % steps == 0, "Monte Carlo Count can't be divided by Steps"
+        assert monte_carlo_count % steps == 0, "Monte Carlo Count can't be divided by Steps"    #assert（断言）用于判断一个表达式，在表达式条件为 false 的时候触发异常或者执行包含语句
         monte_carlo_count //= steps
 
         with torch.no_grad():
@@ -24,7 +24,7 @@ class Rollout:
             result = torch.zeros(batch_size, 1).cuda()
             remaining = self.max_sentence_length - generated.shape[1]
             h, c = hidden
-            generated = generated.repeat(monte_carlo_count, 1, 1)
+            generated = generated.repeat(monte_carlo_count, 1, 1)    #.repeat(a,repeats,axis=None)在轴上重复a数次，repeats是次数
             for _ in range(steps):
                 hidden = (h.repeat(1, monte_carlo_count, 1), c.repeat(1, monte_carlo_count, 1))
                 inputs = generated[:, -1].unsqueeze(1)
@@ -45,6 +45,6 @@ class Rollout:
             return result
 
     def update(self, original_model):
-        self.lstm = copy.deepcopy(original_model.lstm)
+        self.lstm = copy.deepcopy(original_model.lstm)      #opy.copy()与copy.deepcopy()的区别，浅拷贝与深拷贝
         self.lstm.flatten_parameters()
         self.output_linear = copy.deepcopy(original_model.output_linear)
