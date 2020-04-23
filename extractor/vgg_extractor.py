@@ -17,19 +17,19 @@ class VggExtractor(BaseExtractor):
         super().__init__(use_gpu)
         self.use_gpu = use_gpu
         self.cnn = vgg16()
-        self.trans = utils.TransformImage(self.cnn)
+        self.trans = utils.TransformImage(self.cnn)    #？？
         self.trans = transforms.Compose([transforms.ToPILImage(), self.trans])
         if use_gpu:
             self.cnn = self.cnn.cuda()
-        self.cnn.eval()
+        self.cnn.eval()        #model.eval()，让model变成测试模式，对pytorch会自动把BN和DropOut固定住，不会取平均，而是用训练好的值 dropout和batch normalization的操作在训练和测试的时候是不一样的，
         for param in self.cnn.parameters():
             param.requires_grad = False
 
     def extract(self, image):
         if isinstance(image, str):
-            image = cv2.imread(image)
+            image = cv2.imread(image)   #cv2.imread(filepath,flags)读入一副图片,filepath：要读入图片的完整路径,flags：读入图片的标志,默认彩色
         if isinstance(image, np.ndarray):
-            image = cv2torch(image)
+            image = cv2torch(image)   #？？？
         image = self.trans(image)
         image = image.float()
         if len(image.size()) == 3:
