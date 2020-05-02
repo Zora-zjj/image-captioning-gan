@@ -72,8 +72,9 @@ class Corpus:
             self.word2idx[word] = len(self.word2idx)
             self.idx2word[len(self.idx2word)] = word
             self.vocab_size += 1
-
-    def prepare(self):
+            
+    #将cococaption的词加入词典
+    def prepare(self):   
         self.word2idx = defaultdict(int)     #defaultdict(key)，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值
         # to make sure start_symbol, end_symbol, pad, and unk will be included
         self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[    #将这4个词的id都设为5？？？应该是频率5吧？？
@@ -86,9 +87,9 @@ class Corpus:
                                      transform=transforms.ToTensor())        
             for _, captions in caps:
                 for capt in captions:
-                    tokens = self.tokenize(capt)
+                    tokens = self.tokenize(capt)    #toknize后面函数，分词
                     for token in tokens:
-                        self.word2idx[token] += 1
+                        self.word2idx[token] += 1   #未去重？？？
         temp = {}
         embeddings = {}
         fast_text = FastText.load(FilePathManager.resolve("data/fasttext.model"), mmap="r")  #????
@@ -101,30 +102,30 @@ class Corpus:
         self.idx2word = dict(zip(self.word2idx.values(), self.word2idx.keys()))
         self.fast_text = embeddings
 
-    @staticmethod
-    def remove_nonalpha(word: str): #函数参数中的冒号是参数的类型建议符，告诉程序员希望传入的实参的类型。函数后面跟着的箭头是函数返回值的类型建议符
+    @staticmethod                         #处理：移除
+    def remove_nonalpha(word: str):       #函数参数中的冒号是参数的类型建议符，告诉程序员希望传入的实参的类型。函数后面跟着的箭头是函数返回值的类型建议符
         return word.strip().strip(".")    #strip()移除字符串头尾指定的字符（默认为空格或换行符）
 
     @staticmethod
-    def preprocess_sentence(sentence: str):
+    def preprocess_sentence(sentence: str):  #处理：小写，替换
         sentence = sentence.lower().strip().strip(".").replace("'", "").replace(",,", ",").replace(",", " , ").replace(
-            "\"", "")
+            "\"", "")                        
         return sentence
 
-    def tokenize(self, sentence: str):
+    def tokenize(self, sentence: str):  #分词
         temp = self.preprocess_sentence(sentence).split(" ")
         return [self.remove_nonalpha(x)
                 for x in temp
                 if not x.isspace() and x != "" and all(c in string.printable for c in x)]  #str.isspace()检测字符串是否只由空格组成
                                                          #string.printable :包含所有可打印字符的字符串,ASCII码中第33～126号是可打印字符
-    def pad_sentence(self, tokens):
+    def pad_sentence(self, tokens):    #填补句子长度
         tokens = tokens[:self.max_sentence_length]
         temp = len(tokens)
         if temp != self.max_sentence_length:
             tokens.extend([self.PAD] * (self.max_sentence_length - temp))
         return tokens
 
-    def embed_sentence(self, sentence: str, one_hot=False, pad: bool = True):
+    def embed_sentence(self, sentence: str, one_hot=False, pad: bool = True):   #对句子编码，one-hot或者embedding
         sentence = f"{self.START_SYMBOL} {sentence} {self.END_SYMBOL}"
         tokens = self.tokenize(sentence)
         if pad:
@@ -134,21 +135,21 @@ class Corpus:
             result[i] = self.word_one_hot(tokens[i]) if one_hot else self.word_embedding(tokens[i])
         return result
 
-    def sentence_indices(self, sentence):
+    def sentence_indices(self, sentence):    #某句子的词indices
         sentence = f"{self.START_SYMBOL} {sentence} {self.END_SYMBOL}"
         tokens = self.tokenize(sentence)
         tokens = self.pad_sentence(tokens)
         return torch.LongTensor([self.word_index(token) for token in tokens])
 
-    def __call__(self, sentence, one_hot: bool = False):
+    def __call__(self, sentence, one_hot: bool = False):  #对句子one-hot编码
         return self.embed_sentence(sentence, one_hot)
 
-    def store(self, file_path):
+    def store(self, file_path):              #将Word2idx、idx2word、fast_text 保存
         with open(file_path, "wb") as f:
             pickle.dump((self.word2idx, self.idx2word, self.fast_text), f)    #pickle.dump(obj, file, [,protocol])序列化对象，将对象obj保存到文件file中去。
 
     @staticmethod
-    def load(file_path):
+    def load(file_path):                    #将保存在的文件打开，与上面相反
         with open(file_path, "rb") as f:
             word2idx, idx2word, fast_text = pickle.load(f)  #pickle.load(file)反序列化对象，将文件中的数据解析为一个python对象。file中有read()接口和readline()接口
         return Corpus(word2idx, idx2word, fast_text)
