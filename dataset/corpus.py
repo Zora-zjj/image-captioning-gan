@@ -11,7 +11,7 @@ from file_path_manager import FilePathManager
 
 
 class Corpus:
-    START_SYMBOL = "<start>"
+    START_SYMBOL = "<start>"   #加单书名号？？？
     END_SYMBOL = "<end>"
     UNK = "<unk>"
     PAD = "<pad>"
@@ -19,13 +19,13 @@ class Corpus:
     def __init__(self, word2idx=None, idx2word=None, word_embeddings=None):
         self.word2idx = word2idx if word2idx is not None else {}
         self.idx2word = idx2word if idx2word is not None else {}
-        self.fast_text = word_embeddings if word_embeddings is not None else {}
+        self.fast_text = word_embeddings if word_embeddings is not None else {}   #此word_embeddings不是下面函数word_embeddings
         self.vocab_size = len(self.word2idx)
         self.embed_size = 300
         self.max_sentence_length = 18
         self.min_word_freq = 5
 
-    def word_embedding(self, word):
+    def word_embedding(self, word):           #将word转成embedding，result = [1,embed_size]
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
         if isinstance(word, int):             #当word是idx
@@ -33,38 +33,38 @@ class Corpus:
         result = torch.from_numpy(self.fast_text[word]).view(-1)
         return result
 
-    def word_embeddings(self, words):
+    def word_embeddings(self, words):       #批量将words转成embeddings向量, result = [len(words）,embed_size]
         temp = len(words)
         result = torch.zeros(temp, self.embed_size)
         for i in range(temp):
             result[i] = self.word_embedding(words[i])
         return result
 
-    def word_embedding_from_index(self, index):
+    def word_embedding_from_index(self, index):    #对指定index的word进行embedding
         return self.word_embedding(self.word_from_index(index))
 
-    def word_embeddings_from_indices(self, indices):
+    def word_embeddings_from_indices(self, indices):   #对指定indices的words进行embeddings
         words = [self.word_from_index(i) for i in indices]
         return self.word_embeddings(words)
 
-    def word_one_hot(self, word):
+    def word_one_hot(self, word):    #对某个word进行one-hot，列向量
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
-        result = torch.zeros(self.vocab_size).view(-1)
+        result = torch.zeros(self.vocab_size).view(-1)    #[vocab_size,1]一维张量
         if isinstance(word, str):
             word = self.word_index(word)
         result[word] = 1
         return result.long()
 
-    def word_index(self, word):
+    def word_index(self, word):    #由word得index
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
         return self.word2idx[word]
 
-    def word_from_index(self, index):
+    def word_from_index(self, index):   #由index得word
         return self.idx2word[index]
 
-    def words_from_indices(self, indices):
+    def words_from_indices(self, indices):   #由indices得words
         return [self.word_from_index(index) for index in indices]
 
     def add_word(self, word: str):
@@ -76,13 +76,14 @@ class Corpus:
     def prepare(self):
         self.word2idx = defaultdict(int)     #defaultdict(key)，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值
         # to make sure start_symbol, end_symbol, pad, and unk will be included
-        self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[    #？？？
+        self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[    #将这4个词的id都设为5？？？应该是频率5吧？？
             self.PAD] = self.min_word_freq
         for dataset_type in ["train", "val"]:                                                #f表示格式化字符串,相似str.format()
-            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #dset.CocoCaptions()：加载coco的caption
-                                     annFile=FilePathManager.resolve(                 #path.resolve([…paths])：拼接后解析为一个绝对路径
+            #class torchvision.datasets.CocoCaptions(root, annFile, transform=None, target_transform=None)
+            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #data？？？
+                                     annFile=FilePathManager.resolve(                 
                                          f"data/annotations/captions_{dataset_type}2017.json"),
-                                     transform=transforms.ToTensor())
+                                     transform=transforms.ToTensor())        
             for _, captions in caps:
                 for capt in captions:
                     tokens = self.tokenize(capt)
