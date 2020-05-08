@@ -24,46 +24,46 @@ class Corpus:
         self.embed_size = 300
         self.max_sentence_length = 18
         self.min_word_freq = 5
-
-    def word_embedding(self, word):           #将word转成embedding，result = [1,embed_size]
+    #中间
+    def word_embedding(self, word):           #将word转成embedding，result = [embed_size]
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
         if isinstance(word, int):             #当word是idx
             word = self.word_from_index(word)
         result = torch.from_numpy(self.fast_text[word]).view(-1)
         return result
-
+    #中间
     def word_embeddings(self, words):       #批量将words转成embeddings向量, result = [len(words）,embed_size]
         temp = len(words)
         result = torch.zeros(temp, self.embed_size)
         for i in range(temp):
             result[i] = self.word_embedding(words[i])
         return result
-
+    #中间
     def word_embedding_from_index(self, index):    #对指定index的word进行embedding
         return self.word_embedding(self.word_from_index(index))
-
+    #中间
     def word_embeddings_from_indices(self, indices):   #对指定indices的words进行embeddings
         words = [self.word_from_index(i) for i in indices]
         return self.word_embeddings(words)
-
+    #中间
     def word_one_hot(self, word):    #对某个word进行one-hot，列向量
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
-        result = torch.zeros(self.vocab_size).view(-1)    #[vocab_size,1]一维张量
+        result = torch.zeros(self.vocab_size).view(-1)    #[vocab_size]一维张量
         if isinstance(word, str):
             word = self.word_index(word)
         result[word] = 1
         return result.long()
-
+    #中间
     def word_index(self, word):    #由word得index
         if word not in self.word2idx and word not in self.idx2word:
             word = self.UNK
         return self.word2idx[word]
-
+    #中间
     def word_from_index(self, index):   #由index得word
         return self.idx2word[index]
-
+    #中间
     def words_from_indices(self, indices):   #由indices得words
         return [self.word_from_index(index) for index in indices]
 
@@ -81,7 +81,7 @@ class Corpus:
             self.PAD] = self.min_word_freq
         for dataset_type in ["train", "val"]:                                                #f表示格式化字符串,相似str.format()
             #class torchvision.datasets.CocoCaptions(root, annFile, transform=None, target_transform=None)
-            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #data？？？
+            caps = dset.CocoCaptions(root=FilePathManager.resolve(f'data/{dataset_type}'),    #data固定词
                                      annFile=FilePathManager.resolve(                 
                                          f"data/annotations/captions_{dataset_type}2017.json"),
                                      transform=transforms.ToTensor())        
@@ -89,11 +89,11 @@ class Corpus:
                 for capt in captions:
                     tokens = self.tokenize(capt)    #toknize后面函数，分词
                     for token in tokens:
-                        self.word2idx[token] += 1   #未去重？？？
-        temp = {}
+                        self.word2idx[token] += 1   #错误，应该是word2freq
+        temp = {}  #word:索引，第几个词
         embeddings = {}
         fast_text = FastText.load(FilePathManager.resolve("data/fasttext.model"), mmap="r")  #????
-        for k, v in self.word2idx.items():
+        for k, v in self.word2idx.items():  # word,freq
             if v >= self.min_word_freq:
                 temp[k] = len(temp)
                 embeddings[k] = fast_text[k] if k in fast_text else fast_text[self.UNK]
@@ -101,30 +101,30 @@ class Corpus:
         # swap keys and values
         self.idx2word = dict(zip(self.word2idx.values(), self.word2idx.keys()))
         self.fast_text = embeddings
-
+    #中间
     @staticmethod                         #处理：移除
     def remove_nonalpha(word: str):       #函数参数中的冒号是参数的类型建议符，告诉程序员希望传入的实参的类型。函数后面跟着的箭头是函数返回值的类型建议符
         return word.strip().strip(".")    #strip()移除字符串头尾指定的字符（默认为空格或换行符）
-
+    #中间
     @staticmethod
     def preprocess_sentence(sentence: str):  #处理：小写，替换
         sentence = sentence.lower().strip().strip(".").replace("'", "").replace(",,", ",").replace(",", " , ").replace(
             "\"", "")                        
         return sentence
-
+    #中间
     def tokenize(self, sentence: str):  #分词
         temp = self.preprocess_sentence(sentence).split(" ")
         return [self.remove_nonalpha(x)
                 for x in temp
                 if not x.isspace() and x != "" and all(c in string.printable for c in x)]  #str.isspace()检测字符串是否只由空格组成
-                                                         #string.printable :包含所有可打印字符的字符串,ASCII码中第33～126号是可打印字符
+    #中间                                                         #string.printable :包含所有可打印字符的字符串,ASCII码中第33～126号是可打印字符
     def pad_sentence(self, tokens):    #填补句子长度
         tokens = tokens[:self.max_sentence_length]
         temp = len(tokens)
         if temp != self.max_sentence_length:
             tokens.extend([self.PAD] * (self.max_sentence_length - temp))
         return tokens
-
+    #中间
     def embed_sentence(self, sentence: str, one_hot=False, pad: bool = True):   #对句子编码，one-hot或者embedding
         sentence = f"{self.START_SYMBOL} {sentence} {self.END_SYMBOL}"
         tokens = self.tokenize(sentence)
@@ -133,8 +133,8 @@ class Corpus:
         result = torch.zeros(self.max_sentence_length, self.vocab_size if one_hot else self.embed_size)
         for i in range(self.max_sentence_length):
             result[i] = self.word_one_hot(tokens[i]) if one_hot else self.word_embedding(tokens[i])
-        return result
-
+        return result    #[max_sentence_length, embed_size]
+    #中间
     def sentence_indices(self, sentence):    #某句子的词indices
         sentence = f"{self.START_SYMBOL} {sentence} {self.END_SYMBOL}"
         tokens = self.tokenize(sentence)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     # corpus = Corpus()
     # corpus.prepare()
     # corpus.store(FilePathManager.resolve("data/corpus.pkl"))
-    corpus = Corpus.load(FilePathManager.resolve("data/corpus.pkl"))
+    corpus = Corpus.load(FilePathManager.resolve("data/corpus.pkl")) 
     unknown = corpus.word_one_hot(corpus.UNK)
     print(corpus.vocab_size)
     print((corpus.word_one_hot(", ") == unknown).sum())
