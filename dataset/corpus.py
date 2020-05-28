@@ -74,8 +74,8 @@ class Corpus:
             self.vocab_size += 1
             
     #将cococaption的词加入词典
-    def prepare(self):   
-        self.word2idx = defaultdict(int)     #defaultdict(key)，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值
+    def prepare(self):                       # word2idx：单词-计数
+        self.word2idx = defaultdict(int)     #defaultdict(int)，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值
         # to make sure start_symbol, end_symbol, pad, and unk will be included
         self.word2idx[self.START_SYMBOL] = self.word2idx[self.END_SYMBOL] = self.word2idx[self.UNK] = self.word2idx[    #将这4个词的id都设为5？？？应该是频率5吧？？
             self.PAD] = self.min_word_freq
