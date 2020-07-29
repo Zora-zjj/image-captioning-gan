@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 
 
-class Rollout:
+class Rollout:       # Rollout(max_sentence_length, corpus) 
     """Roll-out policy"""
 
     def __init__(self, max_sentence_length, corpus):
@@ -14,8 +14,8 @@ class Rollout:
         self.lstm = None
         self.max_sentence_length = max_sentence_length
         self.output_linear = None
-
-    def reward(self, generated, image_features, hidden, monte_carlo_count, evaluator, steps=1):
+                                                         
+    def reward(self, generated, image_features, hidden, monte_carlo_count, evaluator, steps=1):   # rollout.reward(current_generated, image_features, hidden, monte_carlo_count, evaluator)
         assert monte_carlo_count % steps == 0, "Monte Carlo Count can't be divided by Steps"    #assert（断言）用于判断一个表达式，在表达式条件为 false 的时候触发异常或者执行包含语句
         monte_carlo_count //= steps            # /求商，//求商的整数部分，%求余数
 
@@ -44,7 +44,7 @@ class Rollout:
                 result /= monte_carlo_count
             return result
 
-    def update(self, original_model):
+    def update(self, original_model):   # rollout.update(self)
         self.lstm = copy.deepcopy(original_model.lstm)      #opy.copy()与copy.deepcopy()的区别，浅拷贝与深拷贝
         self.lstm.flatten_parameters()  #重置参数的数据指针,调用flatten_parameters让参数的数据存放成连续的块，提高内存的利用率和效率
         self.output_linear = copy.deepcopy(original_model.output_linear)
