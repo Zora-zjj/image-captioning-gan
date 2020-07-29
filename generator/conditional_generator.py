@@ -47,14 +47,14 @@ class ConditionalGenerator(nn.Module):
         rand = self.dist.sample((image_features.shape[0],)).cuda()   #.sample直接在定义的正态分布上采样，此处的sample是后面定义的函数
 
         # hidden of shape (num_layers * num_directions, batch, hidden_size)
-        hidden = self.features_linear(torch.cat((image_features, rand), 1).unsqueeze(0))
+        hidden = self.features_linear(torch.cat((image_features, rand), 1).unsqueeze(0))   # h0由图片特征和噪声综合
 
         # cell of shape (num_layers * num_directions, batch, hidden_size)
-        cell = Variable(torch.zeros(image_features.shape[0], self.input_encoding_size).unsqueeze(0))
+        cell = Variable(torch.zeros(image_features.shape[0], self.input_encoding_size).unsqueeze(0))  # c0值为0
 
         return hidden.cuda(), cell.cuda()
 
-    def forward(self, features, captions):
+    def forward(self, features, captions):  # 由groundtruth生成caption
         states = self.init_hidden(features)
         hiddens, _ = self.lstm(captions, states)
         outputs = self.output_linear(hiddens[0])
