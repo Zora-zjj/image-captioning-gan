@@ -5,7 +5,7 @@ import copy
 import torch
 import torch.nn.functional as F
 
-
+                     #调用到rollout的模块：ConditionalGenerator、
 class Rollout:       # Rollout(max_sentence_length, corpus) 
     """Roll-out policy"""
 
